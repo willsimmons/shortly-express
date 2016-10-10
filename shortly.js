@@ -2,8 +2,9 @@ var express = require('express');
 var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
-
-
+var bcrypt = require('bcrypt');
+var session = require('express-session');
+var morgan = require('morgan');
 var db = require('./app/config');
 var Users = require('./app/collections/users');
 var User = require('./app/models/user');
@@ -21,6 +22,8 @@ app.use(bodyParser.json());
 // Parse forms (signup/login)
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
+app.use(morgan('combined'));
+app.use(session({ secret: 'wut', cookie: { maxAge: 60000 }}));
 
 
 app.get('/', 
@@ -75,17 +78,53 @@ function(req, res) {
 /************************************************************/
 // Write your authentication routes here
 /************************************************************/
-app.get('/login', 
-function(req, res) {
-  res.render('login');
-});
-
-app.get('/signup', 
-function(req, res) {
+app.get('/signup', function(req, res) {
   res.render('signup');
 });
 
+app.get('/login', function(req, res) {
+  res.render('login');
+});
 
+
+app.post('/login', function(req, res) {
+  var username = req.body.username;
+  var password = req.body.password;
+  var salt = bcrypt.genSaltSync(10);
+  var hash = bcrypt.hashSync(password, salt);
+  //need to look for existing user model
+  var userObj = db.users.findOne({ username: username, password: hash });
+   
+  if (userObj) {
+    req.session(function() {
+      req.session;
+      console.log('session sent');
+      res.redirect('/links');
+    }); 
+  } else {
+    res.redirect('login');
+  }
+});
+
+
+app.post('/signup', function(req, res) {
+  var username = req.body.username;
+  var password = req.body.password;
+  var salt = bcrypt.genSaltSync(10);
+  var hash = bcrypt.hashSync(password, salt);
+  //create user model and session
+  var userObj = { username: username, password: hash };
+   
+  if (userObj) {
+    req.session.regenerate(function() {
+      req.session.user = userObj.username;
+      console.log(user);
+      res.redirect('/links');
+    }); 
+  } else {
+    res.redirect('signup');
+  }
+});
 /************************************************************/
 // Handle the wildcard route last - if all other routes fail
 // assume the route is a short code and try and handle it here.
