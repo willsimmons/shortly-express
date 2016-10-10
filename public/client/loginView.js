@@ -1,12 +1,12 @@
 ///do this
 
-Shortly.signupView = Backbone.View.extend({
+Shortly.loginView = Backbone.View.extend({
   className: 'user',
 
-  template: Templates['signup'],
+  template: Templates['login'],
 
   events: {
-    'submit': 'signup'
+    'submit': 'login'
   },
 
   render: function() {
@@ -22,6 +22,7 @@ Shortly.signupView = Backbone.View.extend({
         password: $form.password.val()
     });
     user.on('submit', this.startSpinner, this);
+    //put in sign in login 
     user.on('sync', this.success, this);
     user.on('error', this.failure, this);
     user.save({});
@@ -30,6 +31,7 @@ Shortly.signupView = Backbone.View.extend({
 
   success: function(user) {
     this.stopSpinner();
+    //show them the links
     var view = new userView({ model: user });
     this.$el.find('.message').append(view.render().$el.hide().fadeIn());
   },
@@ -37,7 +39,7 @@ Shortly.signupView = Backbone.View.extend({
   failure: function(model, res) {
     this.stopSpinner();
     this.$el.find('.message')
-      .html('Please re-enter your new user data')
+      .html('Please re-enter your password')
       .addClass('error');
     return this;
   },

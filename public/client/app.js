@@ -5,7 +5,7 @@ window.Shortly = Backbone.View.extend({
     'click li a.index': 'renderIndexView',
     'click li a.create': 'renderCreateView',
     'click li a.login': 'renderLoginView',
-    'click li a.signup': 'renderSignup'
+    'click li a.signup': 'renderSignupView'
   },
 
   initialize: function() {
