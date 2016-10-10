@@ -1,6 +1,6 @@
 ///do this
 
-Shortly.loginView = Backbone.View.extend({
+Shortly.LoginView = Backbone.View.extend({
   className: 'user',
 
   template: Templates['login'],

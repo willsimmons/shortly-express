@@ -1,6 +1,6 @@
 ///do this
 
-Shortly.signupView = Backbone.View.extend({
+Shortly.SignupView = Backbone.View.extend({
   className: 'user',
 
   template: Templates['signup'],
