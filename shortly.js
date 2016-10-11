@@ -31,7 +31,11 @@ app.use(session({
 
 app.get('/', 
 function(req, res) {
-  res.render('index');
+  if (req.session.username !== undefined) {
+    res.render('index');
+  } else {
+    res.redirect('/login');
+  }
 });
 
 app.get('/create', 
@@ -49,12 +53,10 @@ function(req, res) {
 app.post('/links', 
 function(req, res) {
   var uri = req.body.url;
-
   if (!util.isValidUrl(uri)) {
     console.log('Not a valid url: ', uri);
     return res.sendStatus(404);
   }
-
   new Link({ url: uri }).fetch().then(function(found) {
     if (found) {
       res.status(200).send(found.attributes);
@@ -95,13 +97,13 @@ app.post('/login', function(req, res) {
   var password = req.body.password;
   var salt = bcrypt.genSaltSync(10);
   var hash = bcrypt.hashSync(password, salt);
-  // var user = { username: username, password: hash };
-  new User({'username': username, 'password': hash})
+  var user = { username: username, password: hash };
+  new User({user})
   .fetch().then(function(found) {
     if (found) {
-      console.log(found.username, ' logged in');
+      console.log(found.attributes.username, ' logged in');
       req.session.regenerate(function() {
-        req.session.username = found.username;
+        req.session.username = found.attributes.username;
         console.log('session renewed');
         // res.status(203); //put this somewhere?
         res.redirect('/');
