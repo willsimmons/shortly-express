@@ -96,11 +96,12 @@ app.post('/login', function(req, res) {
   var salt = bcrypt.genSaltSync(10);
   var hash = bcrypt.hashSync(password, salt);
   // var user = { username: username, password: hash };
-  User.query({where: {username: username, password: hash}}).fetch(function(found) {
+  new User({'username': username, 'password': hash})
+  .fetch().then(function(found) {
     if (found) {
-      console.log(user.username, ' logged in');
+      console.log(found.username, ' logged in');
       req.session.regenerate(function() {
-        req.session.username = username;
+        req.session.username = found.username;
         console.log('session renewed');
         // res.status(203); //put this somewhere?
         res.redirect('/');
