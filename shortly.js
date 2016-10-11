@@ -40,14 +40,22 @@ function(req, res) {
 
 app.get('/create', 
 function(req, res) {
-  res.render('index');
+  if (req.session.username !== undefined) {
+    res.render('index');
+  } else {
+    res.redirect('/login');
+  }
 });
 
 app.get('/links', 
 function(req, res) {
-  Links.reset().fetch().then(function(links) {
-    res.status(200).send(links.models);
-  });
+  if (req.session.username !== undefined) {
+    Links.reset().fetch().then(function(links) {
+      res.status(200).send(links.models);
+    });
+  } else {
+    res.redirect('/login');
+  }
 });
 
 app.post('/links', 
