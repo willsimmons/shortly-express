@@ -4,7 +4,6 @@ var partials = require('express-partials');
 var bodyParser = require('body-parser');
 var bcrypt = require('bcrypt');
 var session = require('express-session');
-var morgan = require('morgan');
 var db = require('./app/config');
 var Users = require('./app/collections/users');
 var User = require('./app/models/user');
@@ -22,7 +21,6 @@ app.use(bodyParser.json());
 // Parse forms (signup/login)
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
-app.use(morgan('combined'));
 app.use(session({
   secret: 'whateverman',
   resave: false,
@@ -97,21 +95,23 @@ app.post('/login', function(req, res) {
   var password = req.body.password;
   var salt = bcrypt.genSaltSync(10);
   var hash = bcrypt.hashSync(password, salt);
-
-  
-  var userObj = { username: username, password: hash };
-   
-  if (userObj) {
-    req.session(function() {
-      req.session;
-      console.log('session sent');
-      res.redirect('links');
-    }); 
-  } else {
-    res.redirect('login');
-  }
+  // var user = { username: username, password: hash };
+  User.query({where: {username: username, password: hash}}).fetch(function(found) {
+    if (found) {
+      console.log(user.username, ' logged in');
+      req.session.regenerate(function() {
+        req.session.username = username;
+        console.log('session renewed');
+        // res.status(203); //put this somewhere?
+        res.redirect('/');
+      });
+      // res.status(200).send();
+    } else { 
+      console.log('login failed');
+      res.redirect('/signup');
+    }
+  });
 });
-
 
 app.post('/signup', function(req, res) {
   var username = req.body.username;
@@ -121,16 +121,21 @@ app.post('/signup', function(req, res) {
   var user = { username: username, password: hash };
   new User({ username: username }).fetch().then(function(found) {
     if (found) {
+      console.log('attempted to make duplicate user');
       res.status(400).send('user exists');
+      res.redirect('/signup');
     } else { 
       new User({
         username: username,
         password: hash,
       }).save();
+      //handle empty inputs in html5 form
+      console.log('new user created');
     }
   });
   req.session.regenerate(function() {
     req.session.username = username;
+    console.log('session created');
     // res.status(203); //put this somewhere?
     res.redirect('/');
   });

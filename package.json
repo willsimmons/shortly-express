@@ -37,7 +37,6 @@
     "chai": "^3.5.0",
     "eslint-config-hackreactor": "git://github.com/reactorcore/eslint-config-hackreactor",
     "mocha": "^2.4.5",
-    "morgan": "^1.7.0",
     "nodemon": "^1.11.0"
   },
   "babel": {

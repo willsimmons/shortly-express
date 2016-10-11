@@ -17,22 +17,22 @@ Shortly.LoginView = Backbone.View.extend({
   username: function(e) {
     e.preventDefault();
     var $form = this.$el.find('form .text');
-    var user = new User(
-      { username: $form.username.val(),
-        password: $form.password.val()
-    });
+    // var user = new User(
+    //   { username: $form.username.val(),
+    //     password: $form.password.val()
+    // });
     user.on('submit', this.startSpinner, this);
     //put in sign in login 
     user.on('sync', this.success, this);
     user.on('error', this.failure, this);
-    user.save({});
+    // user.save({});
     $form.val('');
   },
 
   success: function(user) {
     this.stopSpinner();
     //show them the links
-    var view = new userView({ model: user });
+    // var view = new userView({ model: user });
     this.$el.find('.message').append(view.render().$el.hide().fadeIn());
   },
 
