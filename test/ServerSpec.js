@@ -152,7 +152,7 @@ describe('', function() {
 
     }); // 'Shortening links'
 
-    describe('With previously saved urls:', function() {
+    xdescribe('With previously saved urls:', function() {
 
       var link;
 

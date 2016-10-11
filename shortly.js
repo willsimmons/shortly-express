@@ -25,7 +25,7 @@ app.use(session({
   secret: 'whateverman',
   resave: false,
   saveUninitialized: true,
-  cookie: { path: '/', httpOnly: true, secure: false, maxAge: 60000}
+  cookie: {httpOnly: true, secure: false, maxAge: 60000}
 }));
 
 
@@ -113,10 +113,8 @@ app.post('/login', function(req, res) {
       req.session.regenerate(function() {
         req.session.username = found.attributes.username;
         console.log('session renewed');
-        // res.status(203); //put this somewhere?
         res.redirect('/');
       });
-      // res.status(200).send();
     } else { 
       console.log('login failed');
       res.redirect('/signup');
@@ -130,24 +128,22 @@ app.post('/signup', function(req, res) {
   var salt = bcrypt.genSaltSync(10);
   var hash = bcrypt.hashSync(password, salt);
   var user = { username: username, password: hash };
-  new User({ username: username }).fetch().then(function(found) {
+  new User({ user }).fetch().then(function(found) {
     if (found) {
       console.log('attempted to make duplicate user');
       res.status(400).send('user exists');
-      res.redirect('/signup');
+      res.redirect('/login');
     } else { 
       new User({
         username: username,
         password: hash,
       }).save();
-      //handle empty inputs in html5 form
       console.log('new user created');
     }
   });
   req.session.regenerate(function() {
     req.session.username = username;
     console.log('session created');
-    // res.status(203); //put this somewhere?
     res.redirect('/');
   });
 });
