@@ -5,13 +5,13 @@ var Link = require('./link');
 
 var User = db.Model.extend({
   tableName: 'users',
-  defaults: {
-    links: 0
-  },
-  links: function() {
-    // return this.hasMany(Link);
-    return this.hasMany(Link);
-  },
+  // defaults: {
+  //   links: 0
+  // },
+  // links: function() {
+  //   // return this.hasMany(Link);
+  //   return this.hasMany(Link);
+  // },
   initialize: function() {
     this.on('signup', function(model, attrs, options) {
       //get username

@@ -23,7 +23,12 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
 app.use(morgan('combined'));
-app.use(session({ secret: 'wut', cookie: { maxAge: 60000 }}));
+app.use(session({
+  secret: 'whateverman',
+  resave: false,
+  saveUninitialized: true,
+  cookie: { path: '/', httpOnly: true, secure: false, maxAge: 60000}
+}));
 
 
 app.get('/', 
@@ -92,14 +97,15 @@ app.post('/login', function(req, res) {
   var password = req.body.password;
   var salt = bcrypt.genSaltSync(10);
   var hash = bcrypt.hashSync(password, salt);
-  //need to look for existing user model
-  var userObj = db.users.findOne({ username: username, password: hash });
+
+  
+  var userObj = { username: username, password: hash };
    
   if (userObj) {
     req.session(function() {
       req.session;
       console.log('session sent');
-      res.redirect('/links');
+      res.redirect('links');
     }); 
   } else {
     res.redirect('login');
@@ -112,18 +118,22 @@ app.post('/signup', function(req, res) {
   var password = req.body.password;
   var salt = bcrypt.genSaltSync(10);
   var hash = bcrypt.hashSync(password, salt);
-  //create user model and session
-  var userObj = { username: username, password: hash };
-   
-  if (userObj) {
-    req.session.regenerate(function() {
-      req.session.user = userObj.username;
-      console.log(user);
-      res.redirect('/links');
-    }); 
-  } else {
-    res.redirect('signup');
-  }
+  var user = { username: username, password: hash };
+  new User({ username: username }).fetch().then(function(found) {
+    if (found) {
+      res.status(400).send('user exists');
+    } else { 
+      new User({
+        username: username,
+        password: hash,
+      }).save();
+    }
+  });
+  req.session.regenerate(function() {
+    req.session.username = username;
+    // res.status(203); //put this somewhere?
+    res.redirect('/');
+  });
 });
 /************************************************************/
 // Handle the wildcard route last - if all other routes fail
