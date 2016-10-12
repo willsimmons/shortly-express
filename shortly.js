@@ -25,13 +25,12 @@ app.use(session({
   secret: 'whateverman',
   resave: false,
   saveUninitialized: true,
-  cookie: {httpOnly: true, secure: false, maxAge: 60000}
 }));
 
 
 app.get('/', 
 function(req, res) {
-  if (req.session.username !== undefined) {
+  if (req.session.username) {
     res.render('index');
   } else {
     res.redirect('/login');
@@ -40,8 +39,8 @@ function(req, res) {
 
 app.get('/create', 
 function(req, res) {
-  if (req.session.username !== undefined) {
-    res.render('index');
+  if (req.session.username) {
+    res.render('create');
   } else {
     res.redirect('/login');
   }
@@ -49,7 +48,7 @@ function(req, res) {
 
 app.get('/links', 
 function(req, res) {
-  if (req.session.username !== undefined) {
+  if (req.session.username) {
     Links.reset().fetch().then(function(links) {
       res.status(200).send(links.models);
     });
@@ -74,7 +73,6 @@ function(req, res) {
           console.log('Error reading URL heading: ', err);
           return res.sendStatus(404);
         }
-
         Links.create({
           url: uri,
           title: title,
@@ -103,48 +101,47 @@ app.get('/login', function(req, res) {
 app.post('/login', function(req, res) {
   var username = req.body.username;
   var password = req.body.password;
-  var salt = bcrypt.genSaltSync(10);
-  var hash = bcrypt.hashSync(password, salt);
-  var user = { username: username, password: hash };
-  new User({user})
-  .fetch().then(function(found) {
-    if (found) {
-      console.log(found.attributes.username, ' logged in');
-      req.session.regenerate(function() {
-        req.session.username = found.attributes.username;
-        console.log('session renewed');
-        res.redirect('/');
-      });
-    } else { 
-      console.log('login failed');
-      res.redirect('/signup');
-    }
+  new User({username: username})
+  .fetch().then(function(user) {
+    //if user doesn't exist
+    if (!user) {
+      res.redirect('/login');
+    }//check existing user password
+    bcrypt.compare(password, user.get('password'), function(err, match) {
+      if (match) {
+        req.session.regenerate(function() {
+          req.session.username = username;
+          res.redirect('/');
+        });
+      } else {
+        res.redirect('/login');
+      }
+    });
   });
 });
 
 app.post('/signup', function(req, res) {
   var username = req.body.username;
   var password = req.body.password;
-  var salt = bcrypt.genSaltSync(10);
-  var hash = bcrypt.hashSync(password, salt);
-  var user = { username: username, password: hash };
-  new User({ user }).fetch().then(function(found) {
+  new User({ username: username }).fetch().then(function(found) {
+    //check if user exists
     if (found) {
-      console.log('attempted to make duplicate user');
-      res.status(400).send('user exists');
       res.redirect('/login');
-    } else { 
-      new User({
-        username: username,
-        password: hash,
-      }).save();
+    } else {
+      //create new user
+      bcrypt.hash(password, null, null, function(err, hash) {
+        Users.create({
+          username: username,
+          password: hash
+        }).then(function(user) {
+          res.session.regenerate(function() {
+            res.session.username = user.username;
+            res.redirect('/');
+          });
+        });
+      });
       console.log('new user created');
     }
-  });
-  req.session.regenerate(function() {
-    req.session.username = username;
-    console.log('session created');
-    res.redirect('/');
   });
 });
 /************************************************************/
